@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Subject Management | EduManage{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header glass-panel">
+        <div>
+            <h1>Subject Management</h1>
+            <p>Assign subjects to specific courses and semesters</p>
+        </div>
+    </div>
+
+    <div class="form-grid" style="grid-template-columns: 1fr 2fr; align-items: start;">
+        <!-- Add Subject Form -->
+        <div class="form-container glass-panel" style="margin: 0; padding: 30px;">
+            <div class="form-header" style="margin-bottom: 20px;">
+                <h2 style="font-size: 20px;">Add Subject</h2>
+            </div>
+            <form action="/subjects/add" method="POST">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Course</label>
+                    <select name="course_id" class="form-control" required>
+                        <option value="">Select Course</option>
+                        {% for c in courses %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Semester</label>
+                    <input type="number" name="semester" class="form-control" min="1" max="12" placeholder="e.g. 1" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label>Subject Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="e.g. Data Structures" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;"><i class='bx bx-plus'></i> Add Subject</button>
+            </form>
+        </div>
+
+        <!-- Subject List -->
+        <div class="students-section glass-panel">
+            <div class="section-header">
+                <h2 style="font-size: 20px;">Subjects Directory</h2>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Subject Name</th>
+                            <th>Course</th>
+                            <th>Semester</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in subjects %}
+                        <tr>
+                            <td><strong>{{ sub.name }}</strong></td>
+                            <td><span class="status-badge">{{ sub.course_name }}</span></td>
+                            <td>Sem {{ sub.semester }}</td>
+                            <td style="text-align: right;">
+                                <form action="/subjects/delete/{{ sub.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this subject?');">
+                                    <button type="submit" class="action-link link-delete" style="border: none; cursor: pointer; font-family: inherit; display: inline-flex;">
+                                        <i class='bx bx-trash'></i> Drop
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">No subjects found. Add one on the left.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

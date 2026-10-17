@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Attendance | EduManage{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header Section -->
+    <div class="header glass-panel">
+        <div>
+            <h1>Attendance Management</h1>
+            <p>Track daily student attendance and classroom engagement</p>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <span class="status-badge" style="background: rgba(99, 102, 241, 0.15); color: var(--primary); font-size: 14px; padding: 8px 16px;">
+                <i class='bx bx-calendar'></i> {{ selected_date }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="glass-panel" style="padding: 20px 25px; margin-bottom: 30px;">
+        <form method="GET" action="{{ url_for('attendance') }}" style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 180px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; display: block;">Select Date</label>
+                <input type="date" name="date" class="form-control" value="{{ selected_date }}" required>
+            </div>
+
+            <div style="flex: 1; min-width: 180px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; display: block;">Filter by Course</label>
+                <select name="course" class="form-control">
+                    <option value="">All Programs</option>
+                    {% for c in courses %}
+                        <option value="{{ c.name }}" {% if selected_course == c.name %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; display: block;">Semester</label>
+                <select name="semester" class="form-control">
+                    <option value="">All Semesters</option>
+                    {% for sem in range(1, 9) %}
+                        <option value="{{ sem }}" {% if selected_semester == sem|string %}selected{% endif %}>Semester {{ sem }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="btn" style="padding: 14px 24px;">
+                    <i class='bx bx-filter-alt'></i> Apply Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Attendance Stats for Selected Date -->
+    <div class="stats" style="margin-bottom: 30px;">
+        <div class="card glass-panel">
+            <div class="card-icon icon-blue">
+                <i class='bx bx-group'></i>
+            </div>
+            <div class="card-content">
+                <h3>Students</h3>
+                <p>{{ students|length }}</p>
+            </div>
+        </div>
+
+        <div class="card glass-panel">
+            <div class="card-icon icon-green">
+                <i class='bx bx-check-circle'></i>
+            </div>
+            <div class="card-content">
+                <h3>Present</h3>
+                <p style="color: #059669;">{{ stats.Present }}</p>
+            </div>
+        </div>
+
+        <div class="card glass-panel">
+            <div class="card-icon" style="background: linear-gradient(135deg, #fef3c7, #fde68a); color: #d97706;">
+                <i class='bx bx-time'></i>
+            </div>
+            <div class="card-content">
+                <h3>Late</h3>
+                <p style="color: #d97706;">{{ stats.Late }}</p>
+            </div>
+        </div>
+
+        <div class="card glass-panel">
+            <div class="card-icon" style="background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626;">
+                <i class='bx bx-x-circle'></i>
+            </div>
+            <div class="card-content">
+                <h3>Absent</h3>
+                <p style="color: #dc2626;">{{ stats.Absent }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Sheet -->
+    <div class="students-section glass-panel">
+        <div class="section-header">
+            <div>
+                <h2>Daily Attendance Sheet</h2>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+                    Mark attendance for <strong>{{ selected_date }}</strong>
+                </p>
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" class="btn btn-secondary" onclick="markAll('Present')" style="font-size: 13px; padding: 8px 14px;">
+                    <i class='bx bx-check-double'></i> Mark All Present
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="markAll('Absent')" style="font-size: 13px; padding: 8px 14px;">
+                    <i class='bx bx-x'></i> Mark All Absent
+                </button>
+            </div>
+        </div>
+
+        {% if students %}
+        <form method="POST" action="{{ url_for('save_attendance') }}">
+            <input type="hidden" name="date" value="{{ selected_date }}">
+            <input type="hidden" name="course" value="{{ selected_course }}">
+            <input type="hidden" name="semester" value="{{ selected_semester }}">
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Roll No.</th>
+                            <th>Student</th>
+                            <th>Course & Semester</th>
+                            <th style="text-align: center;">Attendance Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        {% set current_status = attendance_map.get(student.id, 'Present') %}
+                        <tr>
+                            <td><strong>{{ student.roll_no }}</strong></td>
+                            <td>
+                                <div class="student-name">
+                                    <div class="avatar">{{ student.name[0]|upper }}</div>
+                                    <div>
+                                        <strong>{{ student.name }}</strong>
+                                        <div style="font-size: 12px; color: var(--text-muted);">{{ student.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge">{{ student.course }}</span>
+                                <span style="font-size: 13px; color: var(--text-muted); margin-left: 5px;">Sem {{ student.semester }}</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="attendance-radios">
+                                    <label class="att-option att-present">
+                                        <input type="radio" name="status_{{ student.id }}" value="Present" {% if current_status == 'Present' %}checked{% endif %}>
+                                        <span><i class='bx bx-check'></i> Present</span>
+                                    </label>
+                                    <label class="att-option att-late">
+                                        <input type="radio" name="status_{{ student.id }}" value="Late" {% if current_status == 'Late' %}checked{% endif %}>
+                                        <span><i class='bx bx-time'></i> Late</span>
+                                    </label>
+                                    <label class="att-option att-absent">
+                                        <input type="radio" name="status_{{ student.id }}" value="Absent" {% if current_status == 'Absent' %}checked{% endif %}>
+                                        <span><i class='bx bx-x'></i> Absent</span>
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 25px; display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn" style="padding: 14px 35px; font-size: 16px;">
+                    <i class='bx bx-save'></i> Save Attendance Sheet
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+            <i class='bx bx-user-x' style="font-size: 48px; color: var(--primary); margin-bottom: 10px;"></i>
+            <h3>No Students Found</h3>
+            <p style="font-size: 14px;">No active students match the selected course or semester filters.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function markAll(status) {
+        const radios = document.querySelectorAll(`input[type="radio"][value="${status}"]`);
+        radios.forEach(radio => {
+            radio.checked = true;
+        });
+    }
+</script>
+{% endblock %}

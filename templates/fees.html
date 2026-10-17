@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Fees Management | EduManage{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header Section -->
+    <div class="header glass-panel">
+        <div>
+            <h1>Fees Management</h1>
+            <p>Manage tuition dues, track payment installments, and issue fee receipts</p>
+        </div>
+    </div>
+
+    <!-- Revenue Stats -->
+    <div class="stats">
+        <div class="card glass-panel">
+            <div class="card-icon icon-blue">
+                <i class='bx bx-coin-stack'></i>
+            </div>
+            <div class="card-content">
+                <h3>Total Expected</h3>
+                <p>₹{{ "{:,.0f}".format(total_expected) }}</p>
+            </div>
+        </div>
+
+        <div class="card glass-panel">
+            <div class="card-icon icon-green">
+                <i class='bx bx-check-shield'></i>
+            </div>
+            <div class="card-content">
+                <h3>Collected</h3>
+                <p style="color: #059669;">₹{{ "{:,.0f}".format(total_collected) }}</p>
+            </div>
+        </div>
+
+        <div class="card glass-panel">
+            <div class="card-icon" style="background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626;">
+                <i class='bx bx-time-five'></i>
+            </div>
+            <div class="card-content">
+                <h3>Pending Dues</h3>
+                <p style="color: #dc2626;">₹{{ "{:,.0f}".format(total_due) }}</p>
+            </div>
+        </div>
+
+        <div class="card glass-panel">
+            <div class="card-icon icon-purple">
+                <i class='bx bx-user-check'></i>
+            </div>
+            <div class="card-content">
+                <h3>Paid in Full</h3>
+                <p>{{ fully_paid_count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fees Directory -->
+    <div class="students-section glass-panel">
+        <div class="section-header">
+            <h2>Student Fee Records</h2>
+            <div class="search-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" id="feeSearchInput" class="search-box" placeholder="Search by name, roll no, or course...">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Roll No.</th>
+                        <th>Student Details</th>
+                        <th>Program</th>
+                        <th>Total Fee</th>
+                        <th>Amount Paid</th>
+                        <th>Pending Due</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="feeTableBody">
+                    {% for f in fee_list %}
+                    <tr>
+                        <td><strong>{{ f.roll_no }}</strong></td>
+                        <td>
+                            <div class="student-name">
+                                <div class="avatar">{{ f.name[0]|upper }}</div>
+                                <div>
+                                    <strong>{{ f.name }}</strong>
+                                    {% if f.last_payment_date %}
+                                    <div style="font-size: 11px; color: var(--text-muted);">Last paid: ₹{{ "{:,.0f}".format(f.last_payment_amount) }} on {{ f.last_payment_date }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="status-badge">{{ f.course }} (Sem {{ f.semester }})</span></td>
+                        <td>
+                            <strong>₹{{ "{:,.0f}".format(f.total_fees) }}</strong>
+                            <button type="button" 
+                                    onclick="openEditFeeModal('{{ f.student_id }}', '{{ f.name }}', '{{ f.total_fees }}')"
+                                    title="Edit Total Fee" 
+                                    style="background: none; border: none; cursor: pointer; color: var(--text-muted); margin-left: 4px;">
+                                <i class='bx bx-pencil' style="font-size: 14px;"></i>
+                            </button>
+                        </td>
+                        <td style="color: #059669; font-weight: 600;">
+                            ₹{{ "{:,.0f}".format(f.paid_fees) }}
+                        </td>
+                        <td style="color: {% if f.pending_fees > 0 %}#dc2626{% else %}#059669{% endif %}; font-weight: 600;">
+                            ₹{{ "{:,.0f}".format(f.pending_fees if f.pending_fees > 0 else 0) }}
+                        </td>
+                        <td>
+                            {% if f.pending_fees <= 0 and f.total_fees > 0 %}
+                                <span class="status-badge" style="background: rgba(16, 185, 129, 0.15); color: #059669;">
+                                    <i class='bx bxs-check-circle'></i> Paid
+                                </span>
+                            {% elif f.paid_fees > 0 %}
+                                <span class="status-badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706;">
+                                    <i class='bx bxs-time'></i> Partial
+                                </span>
+                            {% else %}
+                                <span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #dc2626;">
+                                    <i class='bx bxs-error-circle'></i> Unpaid
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" 
+                                    class="btn" 
+                                    style="padding: 7px 14px; font-size: 13px;"
+                                    onclick="openPaymentModal('{{ f.student_id }}', '{{ f.name }}', '{{ f.roll_no }}', '{{ f.pending_fees }}')">
+                                <i class='bx bx-plus-circle'></i> Record Pay
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            No student fee records found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Record Payment Modal -->
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal-content" style="max-width: 480px; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 15px;">
+            <h3 style="font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                <i class='bx bx-credit-card' style="color: var(--primary);"></i> Record Fee Payment
+            </h3>
+            <button type="button" onclick="closePaymentModal()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">
+            Student: <strong id="modalStudentName" style="color: var(--text-main);"></strong> (<span id="modalRollNo"></span>)<br>
+            Current Outstanding Due: <strong id="modalDueAmount" style="color: #dc2626;"></strong>
+        </p>
+
+        <form id="paymentForm" method="POST" action="">
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="payAmount" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px;">Payment Amount (₹)</label>
+                <input type="number" step="0.01" min="1" id="payAmount" name="amount" class="form-control" required placeholder="e.g. 15000">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="payDate" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px;">Payment Date</label>
+                <input type="date" id="payDate" name="payment_date" class="form-control" required>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 25px;">
+                <button type="button" class="btn btn-secondary" onclick="closePaymentModal()">Cancel</button>
+                <button type="submit" class="btn"><i class='bx bx-check'></i> Confirm Payment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Total Fee Modal -->
+<div class="modal-overlay" id="editFeeModal">
+    <div class="modal-content" style="max-width: 440px; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 15px;">
+            <h3 style="font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                <i class='bx bx-edit' style="color: var(--primary);"></i> Edit Total Course Fee
+            </h3>
+            <button type="button" onclick="closeEditFeeModal()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">
+            Set total course fee for <strong id="editFeeStudentName" style="color: var(--text-main);"></strong>
+        </p>
+
+        <form id="editFeeForm" method="POST" action="">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="totalFeeInput" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px;">Total Fee Amount (₹)</label>
+                <input type="number" step="100" min="0" id="totalFeeInput" name="total_fees" class="form-control" required>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeEditFeeModal()">Cancel</button>
+                <button type="submit" class="btn"><i class='bx bx-save'></i> Update Total Fee</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Search functionality
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById("feeSearchInput");
+        if (searchInput) {
+            searchInput.addEventListener("keyup", function () {
+                const filter = searchInput.value.toLowerCase();
+                const rows = document.querySelectorAll("#feeTableBody tr");
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(filter) ? "" : "none";
+                });
+            });
+        }
+    });
+
+    // Record Payment Modal
+    function openPaymentModal(studentId, name, rollNo, pendingDue) {
+        document.getElementById('modalStudentName').innerText = name;
+        document.getElementById('modalRollNo').innerText = rollNo;
+        const dueNum = parseFloat(pendingDue);
+        document.getElementById('modalDueAmount').innerText = '₹' + (dueNum > 0 ? dueNum.toLocaleString() : '0');
+        document.getElementById('payAmount').value = dueNum > 0 ? dueNum : '';
+        document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('paymentForm').action = '/fees/pay/' + studentId;
+        document.getElementById('paymentModal').classList.add('active');
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').classList.remove('active');
+    }
+
+    // Edit Total Fee Modal
+    function openEditFeeModal(studentId, name, currentTotal) {
+        document.getElementById('editFeeStudentName').innerText = name;
+        document.getElementById('totalFeeInput').value = currentTotal;
+        document.getElementById('editFeeForm').action = '/fees/update-total/' + studentId;
+        document.getElementById('editFeeModal').classList.add('active');
+    }
+
+    function closeEditFeeModal() {
+        document.getElementById('editFeeModal').classList.remove('active');
+    }
+</script>
+{% endblock %}

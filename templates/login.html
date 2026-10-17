@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | EduManage Secure Portal</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Boxicons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- CSS Connection -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-body">
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        <i class='bx bx-info-circle'></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="login-wrapper">
+        <div class="login-card glass-panel">
+            <div class="login-brand">
+                <div class="brand-icon-wrapper">
+                    <i class='bx bxs-graduation'></i>
+                </div>
+                <h2>EduManage</h2>
+                <span class="security-badge"><i class='bx bxs-shield-check'></i> Secure Staff Portal</span>
+            </div>
+
+            <div class="login-intro">
+                <h3>Welcome Back</h3>
+                <p>Please enter your credentials to access the student portal</p>
+            </div>
+
+            <!-- Demo Helper Banner -->
+            <div class="demo-credentials-box" id="demoBanner">
+                <div class="demo-info">
+                    <i class='bx bx-key'></i>
+                    <div>
+                        <strong>Default Admin Credentials</strong>
+                        <span>Username: <code>admin</code> | Password: <code>admin123</code></span>
+                    </div>
+                </div>
+                <button type="button" class="btn-fill-demo" onclick="fillDemoCreds()" title="Auto-fill credentials">
+                    <i class='bx bx-check-double'></i> Fill
+                </button>
+            </div>
+
+            <form method="POST" action="{{ url_for('login', next=request.args.get('next', '')) }}" class="login-form">
+                <div class="form-group-login">
+                    <label for="username"><i class='bx bx-user'></i> Username</label>
+                    <div class="input-with-icon">
+                        <input type="text" id="username" name="username" class="form-control" placeholder="e.g. admin" required autofocus autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="form-group-login">
+                    <label for="password"><i class='bx bx-lock-alt'></i> Password</label>
+                    <div class="input-with-icon password-field">
+                        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                        <button type="button" class="toggle-password" id="togglePasswordBtn" onclick="togglePasswordVisibility()">
+                            <i class='bx bx-show' id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-login">
+                    <span>Sign In to System</span>
+                    <i class='bx bx-right-arrow-alt'></i>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p><i class='bx bx-lock'></i> Protected by End-to-End Session Security</p>
+                <span class="system-phase">Phase 4 Active • Role Based Authorization</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('togglePasswordIcon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('bx-show');
+                toggleIcon.classList.add('bx-hide');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('bx-hide');
+                toggleIcon.classList.add('bx-show');
+            }
+        }
+
+        function fillDemoCreds() {
+            document.getElementById('username').value = 'admin';
+            document.getElementById('password').value = 'admin123';
+        }
+    </script>
+</body>
+</html>

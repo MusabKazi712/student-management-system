@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Admit Student | EduManage{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container glass-panel">
+        <div class="form-header">
+            <h2>Student Admission Form</h2>
+            <p>Fill out the authentic details to officially enroll a new student.</p>
+        </div>
+        
+        <form action="/add" method="POST">
+            <div class="form-grid">
+                
+                <div class="form-group">
+                    <label>Roll Number (Unique)</label>
+                    <input type="text" name="roll_no" class="form-control" placeholder="e.g. 2023CS001" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" name="dob" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select name="gender" class="form-control" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="student@institute.edu" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" name="phone" class="form-control" placeholder="9876543210" pattern="\d{10}" title="Phone number must be exactly 10 digits" maxlength="10" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Program / Course</label>
+                    <select name="course" class="form-control" required>
+                        <option value="">Select Course</option>
+                        {% for c in courses %}
+                        <option value="{{ c.name }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Current Semester (1-12)</label>
+                    <input type="number" name="semester" class="form-control" min="1" max="12" placeholder="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Academic Marks (%)</label>
+                    <input type="number" step="0.01" name="marks" class="form-control" min="0" max="99.99" placeholder="85.50" required>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Permanent Address</label>
+                    <textarea name="address" class="form-control" placeholder="Enter complete residential address..." required></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <a href="{{ url_for('home') }}" class="btn btn-secondary"><i class='bx bx-arrow-back'></i> Return to Dashboard</a>
+                    <button type="submit" class="btn"><i class='bx bx-check-shield'></i> Securely Enroll Student</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

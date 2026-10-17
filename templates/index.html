@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | EduManage{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header Section -->
+    <div class="header glass-panel">
+        <div>
+            <h1>Institute Dashboard</h1>
+            <p>Manage authentic student records with absolute security</p>
+        </div>
+        <a href="{{ url_for('add_student') }}" style="text-decoration: none;">
+            <button class="btn"><i class='bx bx-user-plus'></i> Admit Student</button>
+        </a>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats">
+        <div class="card glass-panel">
+            <div class="card-icon icon-blue">
+                <i class='bx bxs-user-detail'></i>
+            </div>
+            <div class="card-content">
+                <h3>Students</h3>
+                <p>{{ active_students }} <span style="font-size: 14px; color: var(--text-muted); font-weight: 500;">/ {{ total_students }} Active</span></p>
+            </div>
+        </div>
+
+        <div class="card glass-panel">
+            <div class="card-icon icon-purple">
+                <i class='bx bxs-book-alt'></i>
+            </div>
+            <div class="card-content">
+                <h3>Total Courses</h3>
+                <p>{{ active_courses }}</p>
+            </div>
+        </div>
+
+        <div class="card glass-panel">
+            <div class="card-icon icon-green">
+                <i class='bx bx-library'></i>
+            </div>
+            <div class="card-content">
+                <h3>Total Subjects</h3>
+                <p>{{ total_subjects }}</p>
+            </div>
+        </div>
+
+        <div class="card glass-panel">
+            <div class="card-icon" style="background: linear-gradient(135deg, #fef08a, #fde047); color: #854d0e; box-shadow: inset 0 2px 4px rgba(255,255,255,0.5);">
+                <i class='bx bx-bar-chart-alt-2'></i>
+            </div>
+            <div class="card-content">
+                <h3>Avg Marks</h3>
+                <p>{{ avg_marks }}%</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students Section -->
+    <div class="students-section glass-panel">
+        <div class="section-header">
+            <h2>Student Directory</h2>
+            <div class="search-wrapper">
+                <i class='bx bx-search'></i>
+                <input type="text" id="searchInput" class="search-box"
+                    placeholder="Search by name, roll no, or course...">
+            </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Roll No.</th>
+                        <th>Student Profile</th>
+                        <th>Contact details</th>
+                        <th>Program</th>
+                        <th>Batch</th>
+                        <th>Score</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTableBody">
+                    {% for student in students %}
+                    <tr>
+                        <td><strong>{{ student["roll_no"] }}</strong></td>
+                        <td>
+                            <div class="student-name">
+                                <div class="avatar">{{ student["name"][0]|upper }}</div>
+                                <div>
+                                    <strong>{{ student["name"] }}</strong>
+                                    <div style="font-size: 12px; color: var(--text-muted);">{{ student["gender"] }} | {{
+                                        student["dob"] }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 3px;"><i
+                                    class='bx bx-envelope'></i> {{ student["email"] }}</div>
+                            <div style="font-size: 13px; color: var(--text-muted);"><i class='bx bx-phone'></i> {{
+                                student["phone"] }}</div>
+                        </td>
+                        <td><span class="status-badge">{{ student["course"] }}</span></td>
+                        <td>Sem {{ student["semester"] }}</td>
+                        <td><strong>{{ student["marks"] }}%</strong></td>
+                        <td>
+                            {% if student["status"] == 'Active' %}
+                            <span style="color: #059669; font-weight: 600;">
+                                <i class='bx bxs-circle' style="font-size: 10px;"></i> Active
+                            </span>
+                            {% elif student["status"] == 'Inactive' %}
+                            <span style="color: #ef4444; font-weight: 600;">
+                                <i class='bx bxs-circle' style="font-size: 10px;"></i> Inactive
+                            </span>
+                            {% else %}
+                            <span style="color: #64748b; font-weight: 600;">
+                                <i class='bx bxs-circle' style="font-size: 10px;"></i> {{ student["status"] }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-links">
+                                <a href="{{ url_for('profile', id=student['id']) }}" class="action-link" style="color: var(--secondary); background: rgba(16, 185, 129, 0.1);">
+                                    <i class='bx bx-show'></i> View
+                                </a>
+                                <a href="{{ url_for('edit_student', id=student['id']) }}" class="action-link link-edit">
+                                    <i class='bx bx-edit'></i> Edit
+                                </a>
+                                <button data-id="{{ student['id'] }}" data-name="{{ student['name'] }}"
+                                    onclick="openDeleteModal(this.dataset.id, this.dataset.name)"
+                                    class="action-link link-delete"
+                                    style="border: none; cursor: pointer; font-family: inherit;">
+                                    <i class='bx bx-trash'></i> Drop
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 50px; color: var(--text-muted);">
+                            <i class='bx bx-info-circle'
+                                style="font-size: 40px; margin-bottom: 15px; color: var(--primary);"></i><br>
+                            <span style="font-size: 16px;">No students found in the database. Click "Admit Student" to
+                                begin.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content">
+        <i class='bx bx-error-circle modal-icon'></i>
+        <h3>Are you absolutely sure?</h3>
+        <p>This action cannot be undone. This will permanently delete the record of <strong
+                id="studentNameDisplay"></strong> and remove their data from our secure servers.</p>
+
+        <form id="deleteForm" method="POST" action="">
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button type="submit" class="btn btn-danger">Yes, Delete Record</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Delete Modal Logic
+    function openDeleteModal(studentId, studentName) {
+        document.getElementById('studentNameDisplay').innerText = studentName;
+        document.getElementById('deleteForm').action = '/delete/' + studentId;
+        document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('active');
+    }
+
+    // Search Logic
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById("searchInput");
+        if (searchInput) {
+            searchInput.addEventListener("keyup", function () {
+                const filter = searchInput.value.toLowerCase();
+                const rows = document.querySelectorAll("#studentTableBody tr");
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(filter)) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

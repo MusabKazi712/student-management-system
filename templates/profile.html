@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.name }} | Student Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header glass-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div>
+                <h1>Student Profile</h1>
+                <p>Complete academic and personal records for <strong>{{ student.roll_no }}</strong></p>
+            </div>
+            <div>
+                <a href="{{ url_for('edit_student', id=student.id) }}" class="btn btn-secondary"><i class='bx bx-edit'></i> Edit Profile</a>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-top: 30px;">
+        
+        <!-- Left Column: Quick Identity -->
+        <div class="glass-panel" style="padding: 30px; text-align: center;">
+            <div class="avatar" style="width: 120px; height: 120px; font-size: 48px; margin: 0 auto 20px auto; background: linear-gradient(135deg, var(--primary), #a5b4fc); color: white; box-shadow: var(--shadow-md);">
+                {{ student.name[0]|upper }}
+            </div>
+            <h2 style="font-size: 24px; margin-bottom: 5px;">{{ student.name }}</h2>
+            <p style="color: var(--text-muted); font-weight: 500; margin-bottom: 15px;">{{ student.roll_no }}</p>
+            
+            <div style="margin-bottom: 25px;">
+                {% if student.status == 'Active' %}
+                    <span style="background: #d1fae5; color: #065f46; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 13px;"><i class='bx bxs-circle' style="font-size: 10px;"></i> Active Student</span>
+                {% elif student.status == 'Inactive' %}
+                    <span style="background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 13px;"><i class='bx bxs-circle' style="font-size: 10px;"></i> Inactive</span>
+                {% else %}
+                    <span style="background: #f1f5f9; color: #475569; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 13px;"><i class='bx bxs-circle' style="font-size: 10px;"></i> {{ student.status }}</span>
+                {% endif %}
+            </div>
+
+            <div style="text-align: left; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: var(--text-muted);">
+                    <i class='bx bx-envelope' style="font-size: 20px;"></i> <span>{{ student.email }}</span>
+                </div>
+                <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: var(--text-muted);">
+                    <i class='bx bx-phone' style="font-size: 20px;"></i> <span>{{ student.phone }}</span>
+                </div>
+                <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: var(--text-muted);">
+                    <i class='bx bx-calendar' style="font-size: 20px;"></i> <span>DOB: {{ student.dob }}</span>
+                </div>
+                <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: var(--text-muted);">
+                    <i class='bx bx-user' style="font-size: 20px;"></i> <span>{{ student.gender }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Academic & Advanced Info -->
+        <div>
+            <!-- Academic Card -->
+            <div class="glass-panel" style="padding: 30px; margin-bottom: 30px;">
+                <h3 style="font-size: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;"><i class='bx bxs-graduation' style="color: var(--primary);"></i> Academic Information</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Program / Course</p>
+                        <p style="font-size: 16px; font-weight: 500;">{{ student.course }}</p>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Current Semester</p>
+                        <p style="font-size: 16px; font-weight: 500;">Semester {{ student.semester }}</p>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Average Marks</p>
+                        <p style="font-size: 20px; font-weight: 700; color: var(--primary);">{{ student.marks }}%</p>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Residential Address</p>
+                        <p style="font-size: 14px; font-weight: 400; line-height: 1.4;">{{ student.address }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Attendance & Fee Status Widgets (Phase 3) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                <!-- Attendance Card -->
+                <div class="glass-panel" style="padding: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                            <i class='bx bx-calendar-check' style="color: var(--secondary); font-size: 20px;"></i> Attendance Record
+                        </h4>
+                        <span style="font-weight: 700; font-size: 18px; color: {% if att_percent >= 75 %}#059669{% elif att_percent >= 60 %}#d97706{% else %}#dc2626{% endif %};">
+                            {{ att_percent }}%
+                        </span>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.06); border-radius: 10px; height: 10px; overflow: hidden; margin-bottom: 15px;">
+                        <div style="width: {{ att_percent }}%; height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 10px;"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted);">
+                        <span><strong style="color: #059669;">{{ present_attendance }}</strong> Present</span>
+                        <span><strong style="color: #d97706;">{{ late_attendance }}</strong> Late</span>
+                        <span><strong style="color: #dc2626;">{{ absent_attendance }}</strong> Absent</span>
+                        <span><strong>{{ total_attendance }}</strong> Total</span>
+                    </div>
+                </div>
+                
+                <!-- Fees Card -->
+                <div class="glass-panel" style="padding: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                            <i class='bx bx-rupee' style="color: var(--primary); font-size: 20px;"></i> Fee Summary
+                        </h4>
+                        {% set pending_fee = fee_record.total_fees - fee_record.paid_fees %}
+                        {% if pending_fee <= 0 and fee_record.total_fees > 0 %}
+                            <span class="status-badge" style="background: rgba(16, 185, 129, 0.15); color: #059669;">Paid in Full</span>
+                        {% elif fee_record.paid_fees > 0 %}
+                            <span class="status-badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706;">Partial Due</span>
+                        {% else %}
+                            <span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #dc2626;">Unpaid</span>
+                        {% endif %}
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; font-size: 14px;">
+                        <div>
+                            <span style="font-size: 12px; color: var(--text-muted); display: block;">Total Dues</span>
+                            <strong>₹{{ "{:,.0f}".format(fee_record.total_fees) }}</strong>
+                        </div>
+                        <div>
+                            <span style="font-size: 12px; color: var(--text-muted); display: block;">Amount Paid</span>
+                            <strong style="color: #059669;">₹{{ "{:,.0f}".format(fee_record.paid_fees) }}</strong>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.05);">
+                        <span>Balance Due: <strong style="color: {% if pending_fee > 0 %}#dc2626{% else %}#059669{% endif %};">₹{{ "{:,.0f}".format(pending_fee if pending_fee > 0 else 0) }}</strong></span>
+                        <a href="{{ url_for('fees') }}" style="color: var(--primary); font-size: 12px; font-weight: 600; text-decoration: none;">Manage Fees &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject-wise Examination Marks Breakdown -->
+            <div class="glass-panel" style="padding: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px;">
+                    <h3 style="font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                        <i class='bx bx-bar-chart-alt-2' style="color: #9333ea;"></i> Subject Examination Records
+                    </h3>
+                    <a href="{{ url_for('marks') }}" class="btn btn-secondary" style="padding: 6px 14px; font-size: 13px;">
+                        <i class='bx bx-edit'></i> Enter Marks
+                    </a>
+                </div>
+
+                {% if subject_marks %}
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject Name</th>
+                                <th>Semester</th>
+                                <th>Score</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sm in subject_marks %}
+                            <tr>
+                                <td><strong>{{ sm.subject_name }}</strong></td>
+                                <td>Semester {{ sm.semester }}</td>
+                                <td><strong style="color: var(--primary);">{{ sm.marks_obtained }} / 100</strong></td>
+                                <td>
+                                    {% if sm.marks_obtained >= 90 %}
+                                        <span class="status-badge" style="background: rgba(16, 185, 129, 0.15); color: #059669;">A+</span>
+                                    {% elif sm.marks_obtained >= 80 %}
+                                        <span class="status-badge" style="background: rgba(59, 130, 246, 0.15); color: #2563eb;">A</span>
+                                    {% elif sm.marks_obtained >= 70 %}
+                                        <span class="status-badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706;">B</span>
+                                    {% elif sm.marks_obtained >= 50 %}
+                                        <span class="status-badge" style="background: rgba(107, 114, 128, 0.15); color: #4b5563;">C</span>
+                                    {% else %}
+                                        <span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #dc2626;">F</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 30px; color: var(--text-muted);">
+                    <i class='bx bx-info-circle' style="font-size: 30px; color: var(--primary); margin-bottom: 8px;"></i>
+                    <p style="font-size: 14px; margin: 0;">No individual subject marks entered yet for this student.</p>
+                </div>
+                {% endif %}
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

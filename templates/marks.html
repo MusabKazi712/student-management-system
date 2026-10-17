@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Examination Marks | EduManage{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header Section -->
+    <div class="header glass-panel">
+        <div>
+            <h1>Examination & Marks</h1>
+            <p>Enter subject scores, calculate student GPAs, and record academic evaluations</p>
+        </div>
+        <a href="{{ url_for('subjects') }}" class="btn btn-secondary">
+            <i class='bx bx-book-bookmark'></i> Manage Subjects
+        </a>
+    </div>
+
+    <!-- Selection / Filter Panel -->
+    <div class="glass-panel" style="padding: 25px; margin-bottom: 30px;">
+        <form method="GET" action="{{ url_for('marks') }}" style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 180px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; display: block;">1. Select Course</label>
+                <select name="course_id" id="courseSelect" class="form-control" required onchange="filterSubjects()">
+                    <option value="">-- Choose Course --</option>
+                    {% for c in courses %}
+                        <option value="{{ c.id }}" {% if selected_course_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; display: block;">2. Semester</label>
+                <select name="semester" id="semesterSelect" class="form-control" required onchange="filterSubjects()">
+                    <option value="">-- Semester --</option>
+                    {% for sem in range(1, 9) %}
+                        <option value="{{ sem }}" {% if selected_semester == sem %}selected{% endif %}>Semester {{ sem }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 2; min-width: 220px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; display: block;">3. Select Subject</label>
+                <select name="subject_id" id="subjectSelect" class="form-control" required>
+                    <option value="">-- Choose Subject --</option>
+                    {% for sub in all_subjects %}
+                        <option value="{{ sub.id }}" data-course-id="{{ sub.course_id }}" data-semester="{{ sub.semester }}" {% if selected_subject_id == sub.id %}selected{% endif %}>
+                            {{ sub.name }} ({{ sub.course_name }} - Sem {{ sub.semester }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="btn" style="padding: 14px 24px;">
+                    <i class='bx bx-search'></i> Load Marks Sheet
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if selected_subject %}
+    <!-- Marks Entry Section -->
+    <div class="students-section glass-panel">
+        <div class="section-header">
+            <div>
+                <h2>Marks Evaluation Sheet</h2>
+                <p style="font-size: 14px; color: var(--text-muted); margin-top: 3px;">
+                    Subject: <strong style="color: var(--primary);">{{ selected_subject.name }}</strong> | Program: <strong>{{ selected_subject.course_name }} (Sem {{ selected_subject.semester }})</strong>
+                </p>
+            </div>
+            <div>
+                <span class="status-badge" style="background: rgba(16, 185, 129, 0.15); color: #059669; font-size: 13px;">
+                    Max Marks: 100
+                </span>
+            </div>
+        </div>
+
+        {% if students %}
+        <form method="POST" action="{{ url_for('save_marks') }}">
+            <input type="hidden" name="subject_id" value="{{ selected_subject.id }}">
+            <input type="hidden" name="course_id" value="{{ selected_course_id }}">
+            <input type="hidden" name="semester" value="{{ selected_semester }}">
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Roll No.</th>
+                            <th>Student Profile</th>
+                            <th>Current Overall Avg</th>
+                            <th style="width: 200px;">Marks Obtained (0-100)</th>
+                            <th style="text-align: center; width: 130px;">Grade Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        {% set current_score = marks_map.get(student.id, '') %}
+                        <tr>
+                            <td><strong>{{ student.roll_no }}</strong></td>
+                            <td>
+                                <div class="student-name">
+                                    <div class="avatar">{{ student.name[0]|upper }}</div>
+                                    <div>
+                                        <strong>{{ student.name }}</strong>
+                                        <div style="font-size: 12px; color: var(--text-muted);">{{ student.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><strong>{{ student.marks }}%</strong></td>
+                            <td>
+                                <input type="number" 
+                                       name="marks_{{ student.id }}" 
+                                       class="form-control marks-input" 
+                                       min="0" 
+                                       max="100" 
+                                       step="0.5" 
+                                       placeholder="e.g. 85" 
+                                       value="{{ current_score }}"
+                                       oninput="updateGradeBadge(this)">
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="grade-badge status-badge" id="grade_{{ student.id }}">
+                                    {% if current_score != '' %}
+                                        {% set val = current_score|float %}
+                                        {% if val >= 90 %}A+
+                                        {% elif val >= 80 %}A
+                                        {% elif val >= 70 %}B
+                                        {% elif val >= 50 %}C
+                                        {% else %}F
+                                        {% endif %}
+                                    {% else %}
+                                        Pending
+                                    {% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 25px; display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn" style="padding: 14px 35px; font-size: 16px;">
+                    <i class='bx bx-save'></i> Save Examination Marks
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+            <i class='bx bx-user-x' style="font-size: 48px; color: var(--primary); margin-bottom: 10px;"></i>
+            <h3>No Students Enrolled</h3>
+            <p style="font-size: 14px;">No active students found in {{ selected_subject.course_name }} Semester {{ selected_subject.semester }}.</p>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <!-- Help Prompt -->
+    <div class="glass-panel" style="text-align: center; padding: 60px 30px; color: var(--text-muted);">
+        <i class='bx bx-edit' style="font-size: 55px; color: var(--primary); margin-bottom: 15px; opacity: 0.8;"></i>
+        <h2>Select Examination Criteria</h2>
+        <p style="max-width: 500px; margin: 8px auto 0; font-size: 14px;">
+            Choose a Course, Semester, and Subject from the filter bar above to open the evaluation sheet and record grades.
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updateGradeBadge(input) {
+        const val = parseFloat(input.value);
+        const badge = input.closest('tr').querySelector('.grade-badge');
+        if (isNaN(val) || input.value === '') {
+            badge.innerText = 'Pending';
+            badge.style.background = 'rgba(100, 116, 139, 0.1)';
+            badge.style.color = '#64748b';
+            return;
+        }
+
+        if (val >= 90) {
+            badge.innerText = 'A+';
+            badge.style.background = 'rgba(16, 185, 129, 0.15)';
+            badge.style.color = '#059669';
+        } else if (val >= 80) {
+            badge.innerText = 'A';
+            badge.style.background = 'rgba(59, 130, 246, 0.15)';
+            badge.style.color = '#2563eb';
+        } else if (val >= 70) {
+            badge.innerText = 'B';
+            badge.style.background = 'rgba(245, 158, 11, 0.15)';
+            badge.style.color = '#d97706';
+        } else if (val >= 50) {
+            badge.innerText = 'C';
+            badge.style.background = 'rgba(107, 114, 128, 0.15)';
+            badge.style.color = '#4b5563';
+        } else {
+            badge.innerText = 'F (Fail)';
+            badge.style.background = 'rgba(239, 68, 68, 0.15)';
+            badge.style.color = '#dc2626';
+        }
+    }
+</script>
+{% endblock %}

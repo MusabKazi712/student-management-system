@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Course Management | EduManage{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header glass-panel">
+        <div>
+            <h1>Course Management</h1>
+            <p>Add and manage programs offered by the institute</p>
+        </div>
+    </div>
+
+    <div class="form-grid" style="grid-template-columns: 1fr 2fr; align-items: start;">
+        <!-- Add Course Form -->
+        <div class="form-container glass-panel" style="margin: 0; padding: 30px;">
+            <div class="form-header" style="margin-bottom: 20px;">
+                <h2 style="font-size: 20px;">Add New Course</h2>
+            </div>
+            <form action="/courses/add" method="POST">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Course Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="e.g. B.Tech Computer Science" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;"><i class='bx bx-plus'></i> Add Course</button>
+            </form>
+        </div>
+
+        <!-- Course List -->
+        <div class="students-section glass-panel">
+            <div class="section-header">
+                <h2 style="font-size: 20px;">Available Courses</h2>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Course Name</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td>{{ course.id }}</td>
+                            <td><strong>{{ course.name }}</strong></td>
+                            <td style="text-align: right;">
+                                <form action="/courses/delete/{{ course.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this course?');">
+                                    <button type="submit" class="action-link link-delete" style="border: none; cursor: pointer; font-family: inherit; display: inline-flex;">
+                                        <i class='bx bx-trash'></i> Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 30px;">No courses found. Add one on the left.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
